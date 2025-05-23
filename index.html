@@ -131,13 +131,14 @@
       wiersze.forEach(wiersz => tabela.appendChild(wiersz));
     }
 
-  fetch("polska.json")
+  fetch("polska_miejscowosci_kody.json")
       .then(response => response.json())
       .then(data => {
         const datalist = document.getElementById("lokalizacje");
         data.forEach(entry => {
+          const label = `${entry.postal_code} ${entry.place_name}`.trim();
           const option = document.createElement("option");
-          option.value = entry;
+          option.value = label;
           datalist.appendChild(option);
         });
       })
