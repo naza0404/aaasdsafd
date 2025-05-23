@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Platforma Załadunku i Rozładunku</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
   <style>
     table {
       width: 100%;
@@ -13,10 +14,21 @@
       padding: 6px;
       text-align: center;
     }
-    .pilne { background-color: #ffe6e6; }
-    .status-aktualne { background-color: #a5f3a1 !important; font-weight: bold; }
-    .status-nieaktualne { background-color: #f9a1a1 !important; font-weight: bold; }
-    .status-nieznane { background-color: #fff7a1 !important; font-weight: bold; }
+    .pilne {
+      background-color: #ffe6e6;
+    }
+    .status-aktualne {
+      background-color: #a5f3a1 !important;
+      font-weight: bold;
+    }
+    .status-nieaktualne {
+      background-color: #f9a1a1 !important;
+      font-weight: bold;
+    }
+    .status-nieznane {
+      background-color: #fff7a1 !important;
+      font-weight: bold;
+    }
     .date-time-group input {
       width: 45%;
       display: inline-block;
@@ -27,18 +39,21 @@
       height: 60px;
       resize: vertical;
     }
-    input[list] { width: 100%; }
+    input[list] {
+      width: 100%;
+    }
+    #map {
+      height: 400px;
+      margin-top: 30px;
+    }
   </style>
 </head>
 <body>
 
-  <div id="truck-ban-widget" style="text-align:center; margin:20px 0;">
-    <iframe src="https://trafficban.com/plugins/box.html?language=pl" width="100%" height="300" frameborder="0"></iframe>
-  </div>
-
   <h1>Platforma Załadunku i Rozładunku</h1>
+
   <button onclick="dodajWiersz()">➕ Dodaj nowy wiersz</button>
-  <button onclick="sortujTabele()">↕ Sortuj według daty</button>
+  <button onclick="sortujTabele()">⇅ Sortuj według daty</button>
 
   <datalist id="lokalizacje"></datalist>
 
@@ -62,12 +77,17 @@
     <tbody></tbody>
   </table>
 
+  <h2>Mapa orientacyjna</h2>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script>
     const tabela = document.getElementById("tabela").getElementsByTagName("tbody")[0];
 
     function dodajWiersz() {
       const wiersz = tabela.insertRow();
       wiersz.classList.add("pilne");
+
       wiersz.innerHTML = `
         <td><input type="checkbox" checked onclick="togglePilne(this)"></td>
         <td><input type="text" list="lokalizacje" placeholder="Kod + miasto, kraj"></td>
@@ -96,13 +116,15 @@
         </td>
         <td><textarea placeholder="Uwagi"></textarea></td>
         <td><input type="text" placeholder="Stawka"></td>
-        <td><button onclick="usunWiersz(this)">❌ Usuń</button></td>
+        <td><button onclick="usunWiersz(this)">🗑️ Usuń</button></td>
       `;
     }
 
     function usunWiersz(button) {
-      const wiersz = button.closest("tr");
-      tabela.deleteRow(wiersz.rowIndex - 1);
+      if (confirm("Czy na pewno chcesz usunąć ten wiersz?")) {
+        const wiersz = button.closest("tr");
+        tabela.deleteRow(wiersz.rowIndex - 1);
+      }
     }
 
     function zmienAktualnosc(select) {
@@ -131,7 +153,8 @@
       wiersze.forEach(wiersz => tabela.appendChild(wiersz));
     }
 
-  fetch("polska_miejscowosci_kody.json")
+    // Ładowanie lokalizacji z polska_miejscowosci_kody.json
+    fetch("polska_miejscowosci_kody.json")
       .then(response => response.json())
       .then(data => {
         const datalist = document.getElementById("lokalizacje");
@@ -143,6 +166,15 @@
         });
       })
       .catch(error => console.error("Błąd podczas ładowania lokalizacji z Polski:", error));
+
+    // Inicjalizacja mapy Leaflet
+    const map = L.map('map').setView([52.2297, 21.0122], 6); // Warszawa, Polska
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 18
+    }).addTo(map);
+    const marker = L.marker([52.2297, 21.0122]).addTo(map);
+    marker.bindPopup("Warszawa").openPopup();
   </script>
 
 </body>
