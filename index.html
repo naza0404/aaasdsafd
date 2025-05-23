@@ -70,7 +70,9 @@
   <tbody></tbody>
 </table>
 
-<iframe id="targeoMap" src="https://mapa.targeo.pl/targeo_map/main.php?address=&zoom=6&truck=1" allowfullscreen></iframe>
+<div id="mapaLink" style="margin-top:20px; text-align:center;">
+  <a id="linkDoTargeo" href="#" target="_blank" style="font-weight:bold; font-size:1.2em; display:inline-block; padding:10px 20px; background:#f0f0f0; border:1px solid #ccc; border-radius:5px; text-decoration:none;">🔗 Otwórz trasę w Targeo</a>
+</div>
 
 <script>
 function toggleTruckWidget() {
@@ -84,7 +86,7 @@ window.addEventListener('DOMContentLoaded', () => {
     .then(data => {
       const datalist = document.getElementById("lokalizacje");
       data.forEach(entry => {
-        const label = `${entry.postal_code} ${entry.place_name}`.trim();
+        const label = `${entry.place_name} ${entry.postal_code}`.trim();
         const option = document.createElement("option");
         option.value = label;
         datalist.appendChild(option);
@@ -166,11 +168,13 @@ function pokazNaMapie(checkbox) {
   const ladunek = wiersz.cells[1].querySelector("input").value;
   const rozladunek = wiersz.cells[4].querySelector("input").value;
 
-  const adres = encodeURIComponent(ladunek + " do " + rozladunek);
-  const iframe = document.getElementById("targeoMap");
+  const start = encodeURIComponent(ladunek);
+  const cel = encodeURIComponent(rozladunek);
+  const link = `https://mapa.targeo.pl/${start}~${cel}?truck=1`;
 
-  if (adres && iframe) {
-    iframe.src = `https://mapa.targeo.pl/targeo_map/main.php?address=${adres}&zoom=7&truck=1`;
+  const a = document.getElementById("linkDoTargeo");
+  a.href = link;
+  a.textContent = `🔗 Trasa: ${ladunek} → ${rozladunek}`;
   }
 }
 </script>
