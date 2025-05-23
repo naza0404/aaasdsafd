@@ -70,8 +70,8 @@
   <tbody></tbody>
 </table>
 
-<div id="mapaLink" style="margin-top:20px; text-align:center;">
-  <a id="linkDoTargeo" href="#" target="_blank" style="font-weight:bold; font-size:1.2em; display:inline-block; padding:10px 20px; background:#f0f0f0; border:1px solid #ccc; border-radius:5px; text-decoration:none;">🔗 Otwórz trasę w Targeo</a>
+<div id="mapa40ton" style="margin-top:20px; text-align:center;">
+  <iframe src="https://40ton.net/zakazy-ruchu-pojazdow-ciezarowych-w-europie/embed/" width="100%" height="500" style="border:none;"></iframe>
 </div>
 
 <script>
@@ -162,15 +162,10 @@ function zmienAktualnosc(select) {
 
 <script>
 function pokazNaMapie(checkbox) {
-  if (!checkbox.checked) return;
-
-  const wiersz = checkbox.closest("tr");
-  const ladunek = wiersz.cells[1].querySelector("input").value;
-  const rozladunek = wiersz.cells[4].querySelector("input").value;
-
-  const start = encodeURIComponent(ladunek);
-  const cel = encodeURIComponent(rozladunek);
-  const link = `https://mapa.targeo.pl/${start}~${cel}?truck=1`;
+  // Mapa Targeo została zastąpiona mapą informacyjną z 40ton.net
+  // Funkcja nie wykonuje już dynamicznej aktualizacji mapy
+  return;
+}~${cel}?truck=1`;
 
   const a = document.getElementById("linkDoTargeo");
   a.href = link;
