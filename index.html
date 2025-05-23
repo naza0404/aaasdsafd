@@ -131,7 +131,7 @@
       wiersze.forEach(wiersz => tabela.appendChild(wiersz));
     }
 
-  fetch('https://raw.githubusercontent.com/jjbartek/polskie-miejscowosci/main/data.json')
+  fetch("polska.json")
       .then(response => response.json())
       .then(data => {
         const datalist = document.getElementById("lokalizacje");
@@ -141,7 +141,7 @@
           datalist.appendChild(option);
         });
       })
-      .catch(error => console.error("Błąd podczas ładowania lokalizacji Europy:", error));
+      .catch(error => console.error("Błąd podczas ładowania lokalizacji z Polski:", error));
   </script>
 
 </body>
