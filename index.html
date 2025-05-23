@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -67,10 +66,10 @@
       wiersz.classList.add("pilne");
       wiersz.innerHTML = `
         <td><input type="checkbox" checked onclick="togglePilne(this)"></td>
-        <td><input type="text" list="lokalizacje" placeholder="Kod + miasto, kraj"></td>
+        <td><input type="text" list="lokalizacje" placeholder="Miasto (kod)"></td>
         <td class="date-time-group"><input type="date"> <input type="date"></td>
         <td class="date-time-group"><input type="time"> <input type="time"></td>
-        <td><input type="text" list="lokalizacje" placeholder="Kod + miasto, kraj"></td>
+        <td><input type="text" list="lokalizacje" placeholder="Miasto (kod)"></td>
         <td class="date-time-group"><input type="date"> <input type="date"></td>
         <td class="date-time-group"><input type="time"> <input type="time"></td>
         <td><select><option value="tyłem">Tyłem</option><option value="bokiem">Bokiem</option><option value="górą">Górą</option><option value="bok_góra">Bok + Góra</option><option value="auto_winda">Auto z windą</option><option value="inne">Inne</option></select></td>
@@ -115,15 +114,19 @@
     }
 
     fetch('kodypolska.json')
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) throw new Error("Nie udało się załadować pliku JSON");
+        return response.json();
+      })
       .then(data => {
         const datalist = document.getElementById("lokalizacje");
         data.forEach(entry => {
           const option = document.createElement("option");
-          option.value = `${entry.place_name} (${entry.postal_code})`; option.setAttribute('data-code', entry.postal_code);
+          option.value = `${entry.place_name} (${entry.postal_code})`;
           datalist.appendChild(option);
         });
-      });
+      })
+      .catch(error => console.error("Błąd ładowania lokalizacji:", error));
 
     const map = L.map('map').setView([52.1, 19.4], 6);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -131,12 +134,16 @@
     }).addTo(map);
     let routeLayer;
 
+    function extractCity(val) {
+      return val.includes('(') ? val.split('(')[0].trim() : val;
+    }
+
     async function pokazTrase() {
       const row = tabela.rows[0];
       if (!row) return alert("Dodaj wiersz z lokalizacjami!");
 
-      const start = row.cells[1].querySelector("input").value;
-      const end = row.cells[4].querySelector("input").value;
+      const start = extractCity(row.cells[1].querySelector("input").value);
+      const end = extractCity(row.cells[4].querySelector("input").value);
       if (!start || !end) return alert("Wpisz miejsca załadunku i rozładunku.");
 
       const getCoords = async (query) => {
@@ -157,9 +164,4 @@
       map.fitBounds(routeLayer.getBounds());
 
       const distanceKm = (routeData.routes[0].distance / 1000).toFixed(2);
-      row.querySelector(".km-cell").textContent = `${distanceKm} km`;
-    }
-  </script>
-
-</body>
-</html>
+      row.querySe
