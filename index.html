@@ -131,7 +131,7 @@
       wiersze.forEach(wiersz => tabela.appendChild(wiersz));
     }
 
-    fetch('europe_locations_full.json')
+  fetch('https://raw.githubusercontent.com/jjbartek/polskie-miejscowosci/main/data.json')
       .then(response => response.json())
       .then(data => {
         const datalist = document.getElementById("lokalizacje");
