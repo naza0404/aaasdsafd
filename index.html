@@ -28,6 +28,7 @@
     }
     textarea { width: 100%; height: 60px; resize: vertical; }
     input[list], input[type="text"] { width: 100%; }
+    #mapa { width: 100%; height: 500px; margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -59,7 +60,7 @@
   <tbody></tbody>
 </table>
 
-<div id="googleMap" style="width:100%; height:500px; margin-top: 20px;"></div>
+<div id="mapa"></div>
 
 <script>
 function dodajWiersz() {
@@ -123,20 +124,8 @@ function zmienAktualnosc(select) {
   else if (select.value === "nieaktualne") td.classList.add("status-nieaktualne");
   else if (select.value === "nieznane") td.classList.add("status-nieznane");
 }
-</script>
 
-<script>
-let gmap, directionsService, directionsRenderer;
-
-function initMap() {
-  gmap = new google.maps.Map(document.getElementById("googleMap"), {
-    center: { lat: 52.1, lng: 19.3 },
-    zoom: 6,
-  });
-  directionsService = new google.maps.DirectionsService();
-  directionsRenderer = new google.maps.DirectionsRenderer();
-  directionsRenderer.setMap(gmap);
-}
+let mapa;
 
 function pokazNaMapie(checkbox) {
   if (!checkbox.checked) return;
@@ -150,24 +139,43 @@ function pokazNaMapie(checkbox) {
     return;
   }
 
-  const request = {
-    origin: ladunek,
-    destination: rozladunek,
-    travelMode: 'DRIVING'
-  };
+  if (!mapa) {
+    mapa = L.map('mapa').setView([52.1, 19.3], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Mapy © OpenStreetMap'
+    }).addTo(mapa);
+  }
 
-  directionsService.route(request, function(result, status) {
-    if (status == 'OK') {
-      directionsRenderer.setDirections(result);
-      const dystans = result.routes[0].legs[0].distance.value / 1000;
-      wiersz.cells[11].querySelector("input").value = dystans.toFixed(1);
-    } else {
-      alert("Nie udało się wyznaczyć trasy.");
-    }
-  });
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${ladunek}`)
+    .then(res => res.json())
+    .then(data1 => {
+      const lat1 = data1[0].lat, lon1 = data1[0].lon;
+      return fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${rozladunek}`)
+        .then(res => res.json())
+        .then(data2 => {
+          const lat2 = data2[0].lat, lon2 = data2[0].lon;
+          mapa.setView([(parseFloat(lat1)+parseFloat(lat2))/2, (parseFloat(lon1)+parseFloat(lon2))/2], 7);
+          L.marker([lat1, lon1]).addTo(mapa).bindPopup("Załadunek").openPopup();
+          L.marker([lat2, lon2]).addTo(mapa).bindPopup("Rozładunek").openPopup();
+          L.polyline([[lat1, lon1], [lat2, lon2]], {color: 'blue'}).addTo(mapa);
+          const dystans = obliczOdleglosc(parseFloat(lat1), parseFloat(lon1), parseFloat(lat2), parseFloat(lon2));
+          wiersz.cells[11].querySelector("input").value = dystans.toFixed(1);
+        });
+    });
+}
+
+function obliczOdleglosc(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 </script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA_xpS2xj8kDOZI9mcLMv1Up-0ePfDaTxU&callback=initMap"></script>
 
 </body>
 </html>
