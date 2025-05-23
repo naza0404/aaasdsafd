@@ -1,307 +1,199 @@
-
 <!DOCTYPE html>
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Platforma Załadunku i 
-
-Rozładunku</title>
-  <link rel="stylesheet" 
-
-href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <title>Platforma Załadunku i Rozładunku</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
   <style>
-    body { font-family: Arial, 
-
-sans-serif; }
+    body { font-family: Arial, sans-serif; }
     table {
       width: 100%;
       border-collapse: collapse;
+      margin-bottom: 20px;
     }
     th, td {
-      
-
-border: 1px solid #ccc;
+      border: 1px solid #ccc;
       padding: 6px;
       text-align: center;
     }
-    .pilne { background-
-
-color: #ffe6e6; }
-    .status-aktualne { background-color: #a5f3a1 !important; font-weight: bold; 
-
-}
+    .pilne { background-color: #ffe6e6; }
+    .status-aktualne { background-color: #a5f3a1 !important; font-weight: bold; }
     .status-nieaktualne { background-color: #f9a1a1 !important; font-weight: bold; }
-    
-
-.status-nieznane { background-color: #fff7a1 !important; font-weight: bold; }
-    .date-time-group 
-
-input { width: 45%; display: inline-block; margin: 2px 1%; }
-    textarea { width: 100%; height: 
-
-60px; resize: vertical; }
-    input[list] { width: 100%; }
-    #map { height: 400px; margin-top: 
-
-20px; }
+    .status-nieznane { background-color: #fff7a1 !important; font-weight: bold; }
+    .date-time-group input {
+      width: 45%;
+      display: inline-block;
+      margin: 2px 1%;
+    }
+    textarea { width: 100%; height: 60px; resize: vertical; }
+    input[list], input[type="text"] { width: 100%; }
+    #map { height: 400px; margin-top: 30px; }
   </style>
 </head>
 <body>
 
-  <h1>Platforma Załadunku i Rozładunku</h1>
-  <button 
+<h1>Platforma Załadunku i Rozładunku</h1>
+<button onclick="dodajWiersz()">➕ Dodaj nowy wiersz</button>
+<datalist id="lokalizacje"></datalist>
 
-onclick="dodajWiersz()">➕ Dodaj nowy wiersz</button>
-  <button onclick="sortujTabele()">↕ Sortuj 
+<table id="tabela">
+  <thead>
+    <tr>
+      <th>PILNE</th>
+      <th>Załadunek</th>
+      <th>Data załadunku (od-do)</th>
+      <th>Godzina załadunku (od-do)</th>
+      <th>Rozładunek</th>
+      <th>Data rozładunku (od-do)</th>
+      <th>Godzina rozładunku (od-do)</th>
+      <th>Sposób załadunku</th>
+      <th>Potwierdź aktualność</th>
+      <th>Uwagi</th>
+      <th>Stawka</th>
+      <th>Kilometry</th>
+      <th>Stawka z km</th>
+      <th>Mapka</th>
+      <th>Akcje</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-według daty</button>
-  <button onclick="pokazTrase()">📍 Pokaż trasę</button>
+<div id="map"></div>
 
-  <datalist 
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script>
+let dynamicMarker;
+let trasaLayer;
 
-id="lokalizacje"></datalist>
-
-  <table id="tabela">
-    <thead>
-      <tr>
-        <th>PILNE</th>
-      
-
-  <th>Załadunek</th>
-        <th>Data załadunku (od-do)</th>
-        <th>Godzina załadunku (od-do)
-
-</th>
-        <th>Rozładunek</th>
-        <th>Data rozładunku (od-do)</th>
-        <th>Godzina 
-
-rozładunku (od-do)</th>
-        <th>Sposób załadunku</th>
-        <th>Potwierdź aktualność</th>
-     
-
-   <th>Uwagi</th>
-        <th>Kilometry</th>
-        <th>Stawka</th>
-        <th>Akcje</th>
-      
-
-</tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <div id="map"></div>
-
-  <script 
-
-src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
-  <script>
-    const tabela = 
-
-document.getElementById("tabela").getElementsByTagName("tbody")[0];
-
-    function dodajWiersz() {
-   
-
-   const wiersz = tabela.insertRow();
-      wiersz.classList.add("pilne");
-      wiersz.innerHTML = 
-
-`
-        <td><input type="checkbox" checked onclick="togglePilne(this)"></td>
-        <td><input 
-
-type="text" list="lokalizacje" placeholder="Kod + miasto, kraj"></td>
-        <td class="date-
-
-time-group"><input type="date"> <input type="date"></td>
-        <td class="date-time-
-
-group"><input type="time"> <input type="time"></td>
-        <td><input type="text" 
-
-list="lokalizacje" placeholder="Kod + miasto, kraj"></td>
-        <td class="date-time-
-
-group"><input type="date"> <input type="date"></td>
-        <td class="date-time-group"><input 
-
-type="time"> <input type="time"></td>
-        <td><select><option 
-
-value="tyłem">Tyłem</option><option value="bokiem">Bokiem</option><option 
-
-value="górą">Górą</option><option value="bok_góra">Bok + Góra</option><option 
-
-value="auto_winda">Auto z windą</option><option value="inne">Inne</option></select></td>
-        
-
-<td><select onchange="zmienAktualnosc(this)"><option value="">-- wybierz --</option><option 
-
-value="aktualne">Aktualne</option><option value="nieaktualne">Nieaktualne</option><option 
-
-value="nieznane">???</option></select></td>
-        <td><textarea 
-
-placeholder="Uwagi"></textarea></td>
-        <td class="km-cell">0 km</td>
-        <td><input 
-
-type="text" placeholder="Stawka"></td>
-        <td><button onclick="usunWiersz(this)">❌ 
-
-Usuń</button></td>
-      `;
-    }
-
-    function usunWiersz(btn) {
-      if (confirm("Czy na pewno 
-
-chcesz usunąć ten wiersz?")) {
-        tabela.deleteRow(btn.closest("tr").rowIndex - 1);
-      }
-    
-
+function dodajWiersz() {
+  const tabela = document.getElementById("tabela").getElementsByTagName("tbody")[0];
+  const wiersz = tabela.insertRow();
+  wiersz.classList.add("pilne");
+  wiersz.innerHTML = 
+    <td><input type="checkbox" checked onclick="togglePilne(this)"></td>
+    <td><input type="text" list="lokalizacje" placeholder="Kod + miasto, kraj"></td>
+    <td class="date-time-group"><input type="date"> <input type="date"></td>
+    <td class="date-time-group"><input type="time"> <input type="time"></td>
+    <td><input type="text" list="lokalizacje" placeholder="Kod + miasto, kraj"></td>
+    <td class="date-time-group"><input type="date"> <input type="date"></td>
+    <td class="date-time-group"><input type="time"> <input type="time"></td>
+    <td>
+      <select>
+        <option value="tyłem">Tyłem</option>
+        <option value="bokiem">Bokiem</option>
+        <option value="górą">Górą</option>
+        <option value="bok_góra">Bok + Góra</option>
+        <option value="auto_winda">Auto z windą</option>
+        <option value="inne">Inne</option>
+      </select>
+    </td>
+    <td>
+      <select onchange="zmienAktualnosc(this)">
+        <option value="">-- wybierz --</option>
+        <option value="aktualne">Aktualne</option>
+        <option value="nieaktualne">Nieaktualne</option>
+        <option value="nieznane">???</option>
+      </select>
+    </td>
+    <td><textarea placeholder="Uwagi"></textarea></td>
+    <td><input type="text" placeholder="Stawka"></td>
+    <td><input type="text" placeholder="km"></td>
+    <td><input type="text" placeholder="zł/km"></td>
+    <td><input type="checkbox" onchange="pokazNaMapie(this)"></td>
+    <td><button onclick="usunWiersz(this)">🗑️ Usuń</button></td>
+  ;
 }
 
-    function zmienAktualnosc(select) {
-      const td = select.parentNode;
-      
+function togglePilne(checkbox) {
+  const wiersz = checkbox.closest("tr");
+  wiersz.classList.toggle("pilne", checkbox.checked);
+  const tbody = document.getElementById("tabela").getElementsByTagName("tbody")[0];
+  tbody.removeChild(wiersz);
+  checkbox.checked ? tbody.insertBefore(wiersz, tbody.firstChild) : tbody.appendChild(wiersz);
+}
 
-td.classList.remove("status-aktualne", "status-nieaktualne", "status-nieznane");
-      if 
+function usunWiersz(button) {
+  if (confirm("Czy na pewno chcesz usunąć ten wiersz?")) {
+    const wiersz = button.closest("tr");
+    wiersz.remove();
+  }
+}
 
-(select.value === "aktualne") td.classList.add("status-aktualne");
-      else if (select.value === 
+function zmienAktualnosc(select) {
+  const td = select.parentNode;
+  td.classList.remove("status-aktualne", "status-nieaktualne", "status-nieznane");
+  if (select.value === "aktualne") td.classList.add("status-aktualne");
+  else if (select.value === "nieaktualne") td.classList.add("status-nieaktualne");
+  else if (select.value === "nieznane") td.classList.add("status-nieznane");
+}
 
-"nieaktualne") td.classList.add("status-nieaktualne");
-      else if (select.value === "nieznane") 
+const map = L.map('map').setView([52.2297, 21.0122], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap',
+  maxZoom: 18
+}).addTo(map);
 
-td.classList.add("status-nieznane");
+function pokazNaMapie(checkbox) {
+  if (!checkbox.checked) return;
+  const wiersz = checkbox.closest("tr");
+  const ladunek = wiersz.cells[1].querySelector("input").value;
+  const rozladunek = wiersz.cells[4].querySelector("input").value;
+  const kmCell = wiersz.cells[11].querySelector("input");
+  const stawkaCell = wiersz.cells[10].querySelector("input");
+  const stawkaKmCell = wiersz.cells[12].querySelector("input");
+
+  function geocode(miejsce) {
+    return fetch(https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(miejsce)})
+      .then(res => res.json())
+      .then(data => data && data[0] ? [parseFloat(data[0].lat), parseFloat(data[0].lon)] : null);
+  }
+
+  function haversine(coord1, coord2) {
+    const R = 6371;
+    const toRad = x => x * Math.PI / 180;
+    const dLat = toRad(coord2[0] - coord1[0]);
+    const dLon = toRad(coord2[1] - coord1[1]);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(toRad(coord1[0])) * Math.cos(toRad(coord2[0])) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  Promise.all([geocode(ladunek), geocode(rozladunek)]).then(([coord1, coord2]) => {
+    if (coord1 && coord2) {
+      if (dynamicMarker) map.removeLayer(dynamicMarker);
+      if (trasaLayer) map.removeLayer(trasaLayer);
+
+      dynamicMarker = L.marker(coord1).addTo(map).bindPopup("Załadunek: " + ladunek);
+      L.marker(coord2).addTo(map).bindPopup("Rozładunek: " + rozladunek);
+
+      const line = L.polyline([coord1, coord2], { color: 'blue' }).addTo(map);
+      map.fitBounds(line.getBounds());
+      trasaLayer = line;
+
+      const km = haversine(coord1, coord2).toFixed(1);
+      if (kmCell) kmCell.value = km;
+      const stawka = parseFloat(stawkaCell.value.replace(',', '.'));
+      if (!isNaN(stawka) && km > 0 && stawkaKmCell) {
+        stawkaKmCell.value = (stawka / km).toFixed(2);
+      }
     }
-
-    function togglePilne(checkbox) {
-      const row = 
-
-checkbox.closest("tr");
-      row.classList.toggle("pilne", checkbox.checked);
-      const tbody = 
-
-tabela;
-      tbody.removeChild(row);
-      checkbox.checked ? tbody.insertBefore(row, 
-
-tbody.firstChild) : tbody.appendChild(row);
-    }
-
-    function sortujTabele() {
-      const rows = 
-
-Array.from(tabela.rows);
-      rows.sort((a, b) => {
-        const aDate = new Date(a.cells
-
-[2].querySelector("input").value);
-        const bDate = new Date(b.cells[2].querySelector
-
-("input").value);
-        return aDate - bDate;
-      });
-      rows.forEach(row => 
-
-tabela.appendChild(row));
-    }
-
-    fetch('kodypolska.json')
-      .then(response => response.json
-
-())
-      .then(data => {
-        const datalist = document.getElementById("lokalizacje");
-        
-
-data.forEach(entry => {
-          const option = document.createElement("option");
-          
-
-option.value = `${entry.postal_code} ${entry.place_name}, ${entry.country_code}`;
-          
-
-datalist.appendChild(option);
-        });
-      });
-
-    const map = L.map('map').setView([52.1, 
-
-19.4], 6);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      
-
-attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-    let routeLayer;
-
-    async function 
-
-pokazTrase() {
-      const row = tabela.rows[0];
-      if (!row) return alert("Dodaj wiersz z 
-
-lokalizacjami!");
-
-      const start = row.cells[1].querySelector("input").value;
-      const end = 
-
-row.cells[4].querySelector("input").value;
-      if (!start || !end) return alert("Wpisz miejsca 
-
-załadunku i rozładunku.");
-
-      const getCoords = async (query) => {
-        const response = 
-
-await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent
-
-(query)}`);
-        const data = await response.json();
-        return data.length > 0 ? 
-
-[parseFloat(data[0].lat), parseFloat(data[0].lon)] : null;
-      };
-
-      const startCoords = await 
-
-getCoords(start);
-      const endCoords = await getCoords(end);
-      if (!startCoords || !
-
-endCoords) return alert("Nie znaleziono lokalizacji!");
-
-      const url = 
-
-`https://router.project-osrm.org/route/v1/driving/${startCoords[1]},${startCoords[0]};
-
-${endCoords[1]},${endCoords[0]}?overview=full&geometries=geojson`;
-
-      const routeData = await 
-
-fetch(url).then(r => r.json());
-      if (routeLayer) map.removeLayer(routeLayer);
-      routeLayer 
-
-= L.geoJSON(routeData.routes[0].geometry).addTo(map);
-      map.fitBounds(routeLayer.getBounds());
-
- 
-
-     const distanceKm = (routeData.routes[0].distance / 1000).toFixed(2);
-      row.querySelector
-
-(".km-cell").textContent = `${distanceKm} km`;
-    }
-  </script>
-
+  });
+}
+</script>
+ fetch("polska_miejscowosci_kody.json")
+  .then(response => response.json())
+  .then(data => {
+    const datalist = document.getElementById("lokalizacje");
+    data.forEach(entry => {
+      const label = ${entry.postal_code} ${entry.place_name}.trim();
+      const option = document.createElement("option");
+      option.value = label;
+      datalist.appendChild(option);
+    });
+  })
+  .catch(error => console.error("Błąd podczas ładowania lokalizacji:", error));
 </body>
 </html>
