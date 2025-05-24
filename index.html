@@ -164,4 +164,9 @@
       map.fitBounds(routeLayer.getBounds());
 
       const distanceKm = (routeData.routes[0].distance / 1000).toFixed(2);
-      row.querySe
+      row.querySelector(".km-cell").textContent = `${distanceKm} km`;
+    }
+  </script>
+
+</body>
+</html>
