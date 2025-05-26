@@ -80,14 +80,18 @@ function toggleTruckWidget() {
 
 window.addEventListener('DOMContentLoaded', () => {
   fetch('kodypolska.json')
-  .then(response => response.json())
-  .then(data => {
-    const datalist = document.getElementById("lokalizacje");
-    data.forEach(entry => {
-      const option = document.createElement("option");
-      option.value = `${entry.place_name} ${entry.postal_code}`;
-      datalist.appendChild(option);
-    });
+    .then(response => response.json())
+    .then(data => {
+      const datalist = document.getElementById("lokalizacje");
+      datalist.innerHTML = "";
+      data.forEach(entry => {
+        const option = document.createElement("option");
+        option.value = `${entry.place_name} ${entry.postal_code}`;
+        datalist.appendChild(option);
+      });
+    })
+    .catch(error => console.error("Błąd podczas ładowania lokalizacji z kodypolska.json:", error));
+});
   })
   .catch(error => console.error("Błąd podczas ładowania lokalizacji z kodypolska.json:", error));
       data.forEach(entry => {
