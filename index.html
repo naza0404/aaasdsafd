@@ -1,274 +1,165 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Platforma Załadunku i Rozładunku</title>
-  <!-- Wbudowane style CSS -->
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    /* Sekcja informacyjna o zakazach */
-    .info {
-      background-color: #fff8c4;  /* jasny żółty kolor tła dla wyróżnienia */
-      border: 2px solid #ffd800;
-      padding: 10px;
-      margin-bottom: 15px;
-      line-height: 1.5;
-    }
-    .info ul {
-      margin: 5px 0 0 20px;
-    }
-    .info li {
-      margin-bottom: 5px;
-    }
-    .info li:last-child {
-      margin-bottom: 0;
-    }
-    /* Tabela danych */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 10px;
     }
     th, td {
       border: 1px solid #ccc;
       padding: 6px;
       text-align: center;
-      vertical-align: middle;
     }
-    th {
-      background-color: #f0f0f0;
+    .pilne {
+      background-color: #ffe6e6;
     }
-    /* Kolumna dystansu i ceny za km jako nieedytowalne */
-    td.distance, td.rate-per-km {
+    .status-aktualne {
+      background-color: #a5f3a1 !important;
       font-weight: bold;
-      color: #333;
     }
-    /* Pole input wykorzystujące listę datalist powinno zajmować całą szerokość komórki */
+    .status-nieaktualne {
+      background-color: #f9a1a1 !important;
+      font-weight: bold;
+    }
+    .status-nieznane {
+      background-color: #fff7a1 !important;
+      font-weight: bold;
+    }
+    .date-time-group input {
+      width: 45%;
+      display: inline-block;
+      margin: 2px 1%;
+    }
+    textarea {
+      width: 100%;
+      height: 60px;
+      resize: vertical;
+    }
     input[list] {
-      width: 95%;
-    }
-    /* Pole stawki – wyrównanie tekstu do prawej (dla liczb) */
-    td.rate input {
-      width: 80px;
-      text-align: right;
-    }
-    /* Mapa */
-    #map {
-      height: 400px;
-      margin-top: 20px;
-      border: 1px solid #aaa;
-    }
-    /* Przycisk usuwania wiersza */
-    .remove-btn {
-      cursor: pointer;
-      border: none;
-      background: none;
-      font-size: 1.2em;
-      line-height: 1;
+      width: 100%;
     }
   </style>
-  <!-- Załączenie CSS Leaflet z CDN -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" 
-        integrity="sha512-p3x5I6W8kbxMxygtw2M1lVz6lPb3MnTn6m5nOUC1Ok0fP5fMdE6E0xKXEg2CiZGe+D1GN5n7sL3QLxKgFem5mQ==" 
-        crossorigin="" />
 </head>
 <body>
 
-  <h1>Platforma Załadunku i Rozładunku</h1>
-
-  <!-- Sekcja informacyjna o zakazach ruchu -->
-  <div class="info">
-    <strong>Zakazy ruchu ciężarówek:</strong>
-    <ul>
-      <li><strong>Polska:</strong> Niedziele i święta <em>8:00–22:00</em> (dzień przed świętem <em>18:00–22:00</em>). Wakacje (ostatni pt czerwca – koniec sierpnia): pt <em>18:00–22:00</em>, sob <em>8:00–14:00</em>, niedz <em>8:00–22:00</em>:contentReference[oaicite:12]{index=12}.</li>
-      <li><strong>Niemcy:</strong> Niedziele i święta <em>0:00–22:00</em> (pojazdy >7,5 t):contentReference[oaicite:13]{index=13}. Wiele landów wprowadza też nocne ograniczenia (typowo <em>22:00–6:00</em> dla ciężarówek w pobliżu obszarów mieszkalnych):contentReference[oaicite:14]{index=14}:contentReference[oaicite:15]{index=15}.</li>
-    </ul>
+  <!-- Widżet zakazów dla ciężarówek -->
+  <div id="truck-ban-widget" style="text-align:center; margin:20px 0;">
+    <iframe src="https://trafficban.com/plugins/box.html?language=pl" width="100%" height="300" frameborder="0"></iframe>
   </div>
 
-  <!-- Przyciski sterujące -->
+  <h1>Platforma Załadunku i Rozładunku</h1>
   <button onclick="dodajWiersz()">➕ Dodaj nowy wiersz</button>
-  <button onclick="pokazTrase()">📍 Pokaż trasę</button>
+  <button onclick="sortujTabele()">↕ Sortuj według daty</button>
 
-  <!-- Datalist dla lokalizacji (autouzupełnianie) -->
   <datalist id="lokalizacje"></datalist>
 
-  <!-- Tabela danych załadunku/rozładunku -->
-  <table>
+  <table id="tabela">
     <thead>
       <tr>
+        <th>PILNE</th>
         <th>Załadunek</th>
+        <th>Data załadunku (od-do)</th>
+        <th>Godzina załadunku (od-do)</th>
         <th>Rozładunek</th>
-        <th>Dystans (km)</th>
-        <th>Stawka (zł)</th>
-        <th>Cena za km (zł/km)</th>
+        <th>Data rozładunku (od-do)</th>
+        <th>Godzina rozładunku (od-do)</th>
+        <th>Sposób załadunku</th>
+        <th>Potwierdź aktualność</th>
+        <th>Uwagi</th>
+        <th>Stawka</th>
         <th>Akcje</th>
       </tr>
     </thead>
-    <tbody id="tabela-body">
-      <!-- Wiersze dodawane dynamicznie przez JS -->
-    </tbody>
+    <tbody></tbody>
   </table>
 
-  <!-- Miejsce na mapę -->
-  <div id="map"></div>
-
-  <!-- Załączenie skryptu Leaflet JS z CDN -->
-  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" 
-          integrity="sha512-Q+P0Pa7MJh4Szp1Q0v9pF4ycNUaN4tTA9LNXHj5K8mPj0zWev+bP5Z6VKKAvV0MDJ3lrwXaRJAzSX7roBBGEqw==" 
-          crossorigin=""></script>
-  <!-- Skrypt aplikacji -->
   <script>
-    // Pobranie referencji do tabeli (tBody)
-    const tabela = document.getElementById("tabela-body");
+    const tabela = document.getElementById("tabela").getElementsByTagName("tbody")[0];
 
-    // Funkcja dodająca nowy wiersz do tabeli
     function dodajWiersz() {
       const wiersz = tabela.insertRow();
-      // Uzupełnienie HTML komórek nowego wiersza
+      wiersz.classList.add("pilne");
+
       wiersz.innerHTML = `
-        <td><input type="text" list="lokalizacje" placeholder="Miejsce załadunku" /></td>
-        <td><input type="text" list="lokalizacje" placeholder="Miejsce rozładunku" /></td>
-        <td class="distance">--</td>
-        <td class="rate"><input type="number" step="0.01" placeholder="zł" oninput="przeliczStawke(this)" /></td>
-        <td class="rate-per-km">--</td>
-        <td><button class="remove-btn" onclick="usunWiersz(this)">🗑️</button></td>
+        <td><input type="checkbox" checked onclick="togglePilne(this)"></td>
+        <td><input type="text" list="lokalizacje" placeholder="Kod + miasto, kraj"></td>
+        <td class="date-time-group"><input type="date"> <input type="date"></td>
+        <td class="date-time-group"><input type="time"> <input type="time"></td>
+        <td><input type="text" list="lokalizacje" placeholder="Kod + miasto, kraj"></td>
+        <td class="date-time-group"><input type="date"> <input type="date"></td>
+        <td class="date-time-group"><input type="time"> <input type="time"></td>
+        <td>
+          <select>
+            <option value="tyłem">Tyłem</option>
+            <option value="bokiem">Bokiem</option>
+            <option value="górą">Górą</option>
+            <option value="bok_góra">Bok + Góra</option>
+            <option value="auto_winda">Auto z windą</option>
+            <option value="inne">Inne</option>
+          </select>
+        </td>
+        <td>
+          <select onchange="zmienAktualnosc(this)">
+            <option value="">-- wybierz --</option>
+            <option value="aktualne">Aktualne</option>
+            <option value="nieaktualne">Nieaktualne</option>
+            <option value="nieznane">???</option>
+          </select>
+        </td>
+        <td><textarea placeholder="Uwagi"></textarea></td>
+        <td><input type="text" placeholder="Stawka"></td>
+        <td><button onclick="usunWiersz(this)">❌ Usuń</button></td>
       `;
     }
 
-    // Funkcja usuwająca wiersz (wywoływana z przycisku usuń)
-    function usunWiersz(btn) {
-      const row = btn.closest("tr");
-      if (row) {
-        row.remove();
+    function usunWiersz(button) {
+      if (confirm("Czy na pewno chcesz usunąć ten wiersz?")) {
+        const wiersz = button.closest("tr");
+        tabela.deleteRow(wiersz.rowIndex - 1);
       }
     }
 
-    // Pomocnicza funkcja do wyłuskania nazwy miasta (usuwa kod pocztowy w nawiasie, jeśli jest)
-    function extractCity(nazwa) {
-      return nazwa && nazwa.includes("(") ? nazwa.split("(")[0].trim() : nazwa;
+    function zmienAktualnosc(select) {
+      const td = select.parentNode;
+      td.classList.remove("status-aktualne", "status-nieaktualne", "status-nieznane");
+      if (select.value === "aktualne") td.classList.add("status-aktualne");
+      else if (select.value === "nieaktualne") td.classList.add("status-nieaktualne");
+      else if (select.value === "nieznane") td.classList.add("status-nieznane");
     }
 
-    // Funkcja przeliczająca cenę za km po zmianie stawki (wywoływana oninput w polu stawki)
-    function przeliczStawke(inputElem) {
-      const row = inputElem.closest("tr");
-      if (!row) return;
-      const distanceCell = row.querySelector("td.distance");
-      const pricePerKmCell = row.querySelector("td.rate-per-km");
-      // Pobierz wartości dystansu i stawki
-      const distanceText = distanceCell.textContent;
-      const distance = parseFloat(distanceText.replace(',', '.')); // zamiana przecinka na kropkę (jeśli jest)
-      const price = parseFloat(inputElem.value);
-      if (!isNaN(distance) && distance > 0 && !isNaN(price)) {
-        const costPerKm = price / distance;
-        pricePerKmCell.textContent = costPerKm.toFixed(2);
-      } else {
-        // Jeśli brakuje danych lub nieprawidłowe - wyczyść pole
-        pricePerKmCell.textContent = "--";
-      }
+    function togglePilne(checkbox) {
+      const wiersz = checkbox.closest("tr");
+      wiersz.classList.toggle("pilne", checkbox.checked);
+      const tbody = tabela;
+      tbody.removeChild(wiersz);
+      checkbox.checked ? tbody.insertBefore(wiersz, tbody.firstChild) : tbody.appendChild(wiersz);
     }
 
-    // Funkcja wyznaczająca trasę na mapie (dla pierwszego wiersza)
-    async function pokazTrase() {
-      // Pobierz pierwszy wiersz tabeli
-      const row = tabela.rows[0];
-      if (!row) {
-        alert("Dodaj wiersz z lokalizacjami!");
-        return;
-      }
-      // Pobierz wpisane lokalizacje
-      const zaladunekInput = row.cells[0].querySelector("input");
-      const rozladunekInput = row.cells[1].querySelector("input");
-      const startLocation = extractCity(zaladunekInput.value);
-      const endLocation = extractCity(rozladunekInput.value);
-      if (!startLocation || !endLocation) {
-        alert("Wpisz miejsca załadunku i rozładunku.");
-        return;
-      }
-      // Funkcja pomocnicza do geokodowania przez Nominatim
-      async function geocode(query) {
-        const url = "https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(query);
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Błąd geokodowania");
-        const data = await response.json();
-        return (data && data.length > 0) ? [parseFloat(data[0].lat), parseFloat(data[0].lon)] : null;
-      }
-      try {
-        // Geokoduj oba punkty
-        const startCoords = await geocode(startLocation);
-        const endCoords = await geocode(endLocation);
-        if (!startCoords || !endCoords) {
-          alert("Nie znaleziono lokalizacji!");
-          return;
-        }
-        // Przygotuj URL do API OSRM (routing)
-        const routeUrl = `https://router.project-osrm.org/route/v1/driving/${startCoords[1]},${startCoords[0]};${endCoords[1]},${endCoords[0]}?overview=full&geometries=geojson`;
-        const routeResponse = await fetch(routeUrl);
-        if (!routeResponse.ok) throw new Error("Błąd wyznaczania trasy");
-        const routeData = await routeResponse.json();
-        if (!routeData || !routeData.routes || routeData.routes.length === 0) {
-          alert("Nie udało się wyznaczyć trasy!");
-          return;
-        }
-        // Usuń poprzednią trasę z mapy (jeśli istnieje)
-        if (routeLayer) {
-          map.removeLayer(routeLayer);
-        }
-        // Dodaj nową trasę jako warstwę GeoJSON na mapie
-        routeLayer = L.geoJSON(routeData.routes[0].geometry).addTo(map);
-        // Dopasuj widok mapy do nowej trasy
-        map.fitBounds(routeLayer.getBounds());
-        // Pobierz dystans trasy (w metrach), przelicz na km
-        const distanceKm = routeData.routes[0].distance / 1000;
-        // Wpisz dystans do tabeli (zaokrąglony do 2 miejsc po przecinku)
-        const distanceCell = row.querySelector("td.distance");
-        distanceCell.textContent = distanceKm.toFixed(2);
-        // Przelicz stawkę za km, jeśli podano cenę
-        const priceInput = row.cells[3].querySelector("input");
-        if (priceInput && priceInput.value) {
-          // Wywołaj funkcję przeliczenia stawki (zaktualizuje pole "Cena za km")
-          przeliczStawke(priceInput);
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Wystąpił błąd podczas wyznaczania trasy lub geokodowania.");
-      }
+    function sortujTabele() {
+      const wiersze = Array.from(tabela.rows);
+      wiersze.sort((a, b) => {
+        const dataA = new Date(a.cells[2].querySelector("input").value);
+        const dataB = new Date(b.cells[2].querySelector("input").value);
+        return dataA - dataB;
+      });
+      wiersze.forEach(wiersz => tabela.appendChild(wiersz));
     }
 
-    // Inicjalizacja mapy Leaflet
-    const map = L.map('map').setView([52.1, 19.4], 6); // środek Polski
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-    let routeLayer = null; // warstwa z narysowaną trasą (globalnie, by móc usuwać)
-
-    // Wczytanie danych lokalizacji z pliku JSON i zapełnienie datalist
-    fetch('kodypolska.json')
-      .then(response => {
-        if (!response.ok) throw new Error("Nie udało się załadować pliku lokalizacji.");
-        return response.json();
-      })
+    // Ładowanie lokalizacji z pliku JSON
+    fetch('https://raw.githubusercontent.com/jjbartek/polskie-miejscowosci/main/data.json')   .then(response => response.json())
       .then(data => {
-        const lista = document.getElementById("lokalizacje");
+        const datalist = document.getElementById("lokalizacje");
         data.forEach(entry => {
           const option = document.createElement("option");
-          // Każda opcja: "Miejscowość (kod)"
-          option.value = `${entry.place_name} (${entry.postal_code})`;
-          lista.appendChild(option);
+          option.value = `${entry.postal_code} ${entry.place_name}, ${entry.country_code}`;
+          datalist.appendChild(option);
         });
       })
-      .catch(err => {
-        console.error("Błąd ładowania lokalizacji:", err);
-      });
-
-    // Dodaj domyślnie jeden pusty wiersz na start
-    dodajWiersz();
+      .catch(error => console.error("Błąd podczas ładowania lokalizacji UE:", error));
   </script>
+
 </body>
 </html>
