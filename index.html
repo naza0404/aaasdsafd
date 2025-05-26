@@ -95,6 +95,48 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <script>
+function dodajWiersz() {
+  const tabela = document.querySelector("#tabela tbody");
+  if (!tabela) return;
+  const wiersz = tabela.insertRow();
+  wiersz.classList.add("pilne");
+  wiersz.innerHTML = `
+    <td><input type="checkbox" checked onclick="togglePilne(this)"></td>
+    <td><input type="text" list="lokalizacje" placeholder="Miasto Kod"></td>
+    <td class="date-time-group"><input type="date"> <input type="date"></td>
+    <td class="date-time-group"><input type="time"> <input type="time"></td>
+    <td><input type="text" list="lokalizacje" placeholder="Miasto Kod"></td>
+    <td class="date-time-group"><input type="date"> <input type="date"></td>
+    <td class="date-time-group"><input type="time"> <input type="time"></td>
+    <td>
+      <select>
+        <option value="tyłem">Tyłem</option>
+        <option value="bokiem">Bokiem</option>
+        <option value="górą">Górą</option>
+        <option value="bok_góra">Bok + Góra</option>
+        <option value="auto_winda">Auto z windą</option>
+        <option value="inne">Inne</option>
+      </select>
+    </td>
+    <td>
+      <select onchange="zmienAktualnosc(this)">
+        <option value="">-- wybierz --</option>
+        <option value="aktualne">Aktualne</option>
+        <option value="nieaktualne">Nieaktualne</option>
+        <option value="nieznane">???</option>
+      </select>
+    </td>
+    <td><textarea placeholder="Uwagi"></textarea></td>
+    <td><input type="text" placeholder="Stawka"></td>
+    <td><input type="text" placeholder="km"></td>
+    <td><input type="text" placeholder="zł/km"></td>
+    <td><input type="checkbox" onchange="pokazNaMapie(this)"></td>
+    <td><button onclick="usunWiersz(this)">🗑️ Usuń</button></td>
+  `;
+}
+</script>
+
+<script>
 function pokazNaMapie(checkbox) {
   if (!checkbox.checked) return;
 
