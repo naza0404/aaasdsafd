@@ -35,6 +35,8 @@
     }
   
 textarea { height: 100px !important; }
+
+input.krotkie { width: 70px !important; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js">
 function podlaczZdarzeniaDoWiersza(wiersz) {
@@ -65,10 +67,9 @@ function sortujPilneNaTopie() {
 <body>
 <div id="truck-ban-widget" style="margin: 10px 0; text-align: center;">
 <button onclick="toggleTruckWidget()" style="margin-bottom: 5px;">PokaĹĽ/Ukryj zakazy ruchu</button>
-
 </div>
 <h1>Platforma ZaĹ‚adunku i RozĹ‚adunku</h1>
-<button onclick="zapiszDane()">đź’ľ Zapisz dane do Supabase</button>
+
 <button onclick="dodajWiersz()">âž• Dodaj nowy wiersz</button>
 <datalist id="lokalizacje"></datalist>
 <table id="tabela">
@@ -82,7 +83,6 @@ function sortujPilneNaTopie() {
 <th>Data rozĹ‚adunku (od-do)</th>
 <th>Godzina rozĹ‚adunku (od-do)</th>
 <th>SposĂłb zaĹ‚adunku</th>
-
 <th>Uwagi</th>
 <th>Stawka</th>
 <th>Kilometry</th>
@@ -93,6 +93,10 @@ function sortujPilneNaTopie() {
 </thead>
 <tbody></tbody>
 </table>
+
+<div id="truck-ban-widget" style="margin: 10px 0; text-align: center;">
+<iframe frameborder="0" height="300" src="https://trafficban.com/plugins/table.html?language=pl" width="100%"></iframe>
+</div>
 <div id="map" style="height: 500px; margin-top: 30px;"></div>
 <link href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" rel="stylesheet"/>
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js">
