@@ -68,16 +68,24 @@ function sortujPilneNaTopie() {
 </script>
 </head>
 <body>
-<div id="truck-ban-container" style="margin: 10px 0;">
-<h2>Zakazy ruchu ciÄ™ĹĽarĂłwek w Europie</h2>
+<div style="text-align: center; margin: 20px 0;">
 <button onclick="toggleTruckWidget()">PokaĹĽ/Ukryj zakazy ruchu</button>
-<div id="truck-ban-widget" style="margin-top: 10px;">
+</div>
+<div id="truck-ban-widget" style="display: none; margin-bottom: 20px;">
+<h3>Zakazy ruchu ciÄ™ĹĽarĂłwek w Europie</h3>
 <iframe frameborder="0" height="300" src="https://trafficban.com/plugins/box.html?language=pl" width="100%"></iframe>
 </div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
-
-</div>
+<script>
+function toggleTruckWidget() {
+  const el = document.getElementById('truck-ban-widget');
+  if (el.style.display === 'none') {
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth' });
+  } else {
+    el.style.display = 'none';
+  }
+}
+</script>
 <h1>Platforma ZaĹ‚adunku i RozĹ‚adunku</h1>
 <button onclick="dodajWiersz()">âž• Dodaj nowy wiersz</button>
 <datalist id="lokalizacje"></datalist>
@@ -91,8 +99,8 @@ function sortujPilneNaTopie() {
 <th>RozĹ‚adunek</th>
 <th>Data rozĹ‚adunku (od-do)</th>
 <th>Godzina rozĹ‚adunku (od-do)</th>
-<th>SposĂłb zaĹ‚adunku</th>
-<th>Uwagi</th>
+<th>SposĂłb zaĹ‚adunku</th><th>Uwagi</th>
+
 <th>Stawka</th>
 <th>Kilometry</th>
 <th>Stawka z km</th>
@@ -103,7 +111,7 @@ function sortujPilneNaTopie() {
 <tbody></tbody>
 </table>
 <div id="truck-ban-widget" style="margin: 10px 0; text-align: center;">
-
+<button onclick="document.getElementById('truck-ban-widget').scrollIntoView({ behavior: 'smooth' });" style="margin-bottom: 5px;">PokaĹĽ/Ukryj zakazy ruchu</button>
 </div><div id="map" style="height: 500px; margin-top: 30px;"></div>
 <link href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" rel="stylesheet"/>
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js">
